@@ -14,7 +14,6 @@
             background-color: #f8fafc; 
             overflow-x: hidden;
         }
-        /* Memastikan QR Code konsisten dan tidak keluar kotak di HP */
         .qr-canvas {
             display: flex;
             justify-content: center;
@@ -32,8 +31,6 @@
         }
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Pencegahan zoom otomatis pada input iOS/Android */
         input, textarea { font-size: 16px !important; }
     </style>
 </head>
@@ -83,9 +80,16 @@
         </div>
 
         <div id="sendView" class="hidden fade-in">
-            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200 mb-8 text-center">
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200 mb-8">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Mengirim Pesan Ke</p>
-                <h2 id="targetDisplay" class="text-2xl font-extrabold text-blue-600 mb-6"></h2>
+                <h2 id="targetDisplay" class="text-2xl font-extrabold text-blue-600 mb-6 text-center"></h2>
+                
+                <div class="mb-4">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase ml-2 mb-1 block">Nama Kamu (Opsional)</label>
+                    <input type="text" id="senderName" placeholder="Anonim" 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold">
+                </div>
+
                 <textarea id="msgText" placeholder="Tulis pesan rahasiamu di sini..." 
                     class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 h-40 outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4 resize-none"></textarea>
                 <button id="sendBtn" onclick="handleSend()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-blue-700 transition-colors">Kirim Pesan Aman</button>
@@ -97,14 +101,15 @@
             <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200 text-center mb-8">
                 <h2 id="ownerNameDisplay" class="text-xl font-extrabold mb-6 truncate px-2"></h2>
                 <div id="qrcode" class="mb-8 qr-canvas"></div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3 mb-4">
                     <button onclick="downloadQR()" class="bg-slate-900 text-white py-4 rounded-2xl font-bold text-[11px] uppercase">Unduh QR</button>
                     <button onclick="copyMyLink()" class="bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold text-[11px] uppercase">Salin Link</button>
                 </div>
+                <p class="text-[9px] text-slate-400 italic">Tips: Jika gagal unduh, tekan lama gambar QR lalu pilih "Simpan Gambar".</p>
             </div>
 
             <div class="flex justify-between items-center mb-6 px-2">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Pesan Masuk (Tersimpan)</h3>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Pesan Masuk</h3>
                 <button onclick="clearInbox()" class="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase">Hapus Semua</button>
             </div>
             
@@ -113,7 +118,6 @@
     </main>
 
     <script>
-        // --- KONFIGURASI SUPABASE ---
         const SUPABASE_URL = 'https://zjitozgdzhznvcvghmfi.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqaXRvemdkemh6bnZjdmdobWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNTE2MzksImV4cCI6MjA5MjcyNzYzOX0.zFdXLcPcM9bfYukM4hJ-qLNWAMnczReauFbLLAzrMlE';
 
@@ -130,7 +134,6 @@
         const params = new URLSearchParams(window.location.search);
         const target = params.get('to');
 
-        // --- KRIPTOGRAFI AES-GCM ---
         async function getEncryptionKey(id) {
             const enc = new TextEncoder();
             const keyMaterial = await crypto.subtle.importKey(
@@ -163,10 +166,9 @@
                 
                 const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
                 return new TextDecoder().decode(decrypted);
-            } catch (e) { return "⚠️ Gagal membaca pesan (Kunci tidak cocok)."; }
+            } catch (e) { return "⚠️ Gagal membaca pesan."; }
         }
 
-        // --- LOGIKA HALAMAN ---
         function start() {
             if (target && target !== myID) {
                 document.getElementById('sendView').classList.remove('hidden');
@@ -182,6 +184,7 @@
         async function handleSend() {
             if (!supabaseClient) return alert("Supabase belum terhubung!");
             const txt = document.getElementById('msgText').value.trim();
+            const sender = document.getElementById('senderName').value.trim() || "Anonim";
             if (!txt) return alert("Harap isi pesan!");
             
             const btn = document.getElementById('sendBtn');
@@ -191,11 +194,11 @@
 
             const { error } = await supabaseClient
                 .from('messages')
-                .insert([{ receiver_id: target, content: encryptedMsg }]);
+                .insert([{ receiver_id: target, content: encryptedMsg, sender_id: sender }]);
 
             if (error) alert("Gagal mengirim: " + error.message);
             else {
-                alert("Pesan terenkripsi berhasil dikirim!");
+                alert("Pesan berhasil dikirim!");
                 document.getElementById('msgText').value = '';
             }
             btn.disabled = false; btn.innerText = "Kirim Pesan Aman";
@@ -222,7 +225,13 @@
                 
                 const item = document.createElement('div');
                 item.className = "bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm border-l-4 border-l-blue-500 fade-in";
-                item.innerHTML = `<p class="text-sm text-slate-700 leading-relaxed">${decrypted}</p><span class="text-[9px] font-bold text-slate-300 mt-4 block uppercase">${time}</span>`;
+                item.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Dari: ${m.sender_id || 'Anonim'}</span>
+                        <span class="text-[9px] font-bold text-slate-300 uppercase">${time}</span>
+                    </div>
+                    <p class="text-sm text-slate-700 leading-relaxed">${decrypted}</p>
+                `;
                 list.appendChild(item);
             }
         }
@@ -230,10 +239,8 @@
         function handleSaveID() {
             let val = document.getElementById('inputID').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
             if (val.length < 3) return alert("ID minimal 3 karakter.");
-            
             const uniqueID = val + "_" + Math.floor(1000 + Math.random() * 9000);
             localStorage.setItem('sqr_id', uniqueID);
-            
             window.location.href = window.location.origin + window.location.pathname;
         }
 
@@ -271,7 +278,6 @@
         function downloadQR() {
             const img = document.querySelector('#qrcode img');
             if (!img) return alert("QR Code belum siap.");
-            
             fetch(img.src)
                 .then(res => res.blob())
                 .then(blob => {
@@ -285,7 +291,7 @@
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                 })
-                .catch(() => alert("Gagal mengunduh gambar secara otomatis. Silakan tekan lama pada gambar QR untuk simpan manual."));
+                .catch(() => alert("Gagal mengunduh. Silakan tekan lama pada gambar QR untuk simpan manual."));
         }
 
         window.onload = start;
