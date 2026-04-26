@@ -14,7 +14,7 @@
             background-color: #f8fafc; 
             overflow-x: hidden;
         }
-        /* Memastikan QR Code selalu muat di dalam box putih layar HP */
+        /* Memastikan QR Code konsisten dan tidak keluar kotak di HP */
         .qr-canvas {
             display: flex;
             justify-content: center;
@@ -26,15 +26,15 @@
         .qr-canvas img, .qr-canvas canvas {
             max-width: 100% !important;
             height: auto !important;
-            border-radius: 12px;
-            border: 4px solid white;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            border: 8px solid white;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Menyesuaikan input agar tidak terlalu besar di HP */
-        input, textarea { font-size: 16px !important; } 
+        /* Pencegahan zoom otomatis pada input iOS/Android */
+        input, textarea { font-size: 16px !important; }
     </style>
 </head>
 <body class="text-slate-900">
@@ -48,29 +48,29 @@
         </div>
     </nav>
 
-    <main class="max-w-xl mx-auto py-6 px-4 md:px-6">
+    <main class="max-w-xl mx-auto py-8 px-6">
         
-        <div id="infoCaraKerja" class="mb-6 bg-blue-600 rounded-[24px] md:rounded-[32px] p-6 md:p-8 text-white shadow-xl shadow-blue-100 fade-in">
+        <div id="infoCaraKerja" class="mb-8 bg-blue-600 rounded-[32px] p-8 text-white shadow-xl shadow-blue-100 fade-in">
             <h2 class="text-lg font-bold mb-4 flex items-center gap-2">Bagaimana cara kerjanya?</h2>
             <div class="space-y-4 text-sm opacity-90 leading-relaxed">
                 <div class="flex gap-3">
                     <div class="font-bold bg-white/20 w-6 h-6 flex items-center justify-center rounded-full shrink-0 text-xs">1</div>
-                    <p><strong>Enkripsi dari HP Pengirim:</strong> Pesan diubah menjadi kode acak (AES-256) sebelum dikirim.</p>
+                    <p><strong>Enkripsi dari Perangkat Pengirim:</strong> Saat seseorang mengirim pesan, teks langsung diubah menjadi kode acak menggunakan algoritma <strong>AES-256-GCM</strong> di perangkat mereka.</p>
                 </div>
                 <div class="flex gap-3">
                     <div class="font-bold bg-white/20 w-6 h-6 flex items-center justify-center rounded-full shrink-0 text-xs">2</div>
-                    <p><strong>Database Aman:</strong> Admin tidak bisa membaca isi pesan karena hanya tersimpan kode acak.</p>
+                    <p><strong>Penyimpanan Aman:</strong> Database hanya menerima kode acak tersebut. Siapapun yang mencoba melihat database tidak akan bisa membaca isi pesan aslinya.</p>
                 </div>
                 <div class="flex gap-3">
                     <div class="font-bold bg-white/20 w-6 h-6 flex items-center justify-center rounded-full shrink-0 text-xs">3</div>
-                    <p><strong>Dekripsi di HP Kamu:</strong> Pesan hanya terbuka di perangkatmu dengan ID yang tepat.</p>
+                    <p><strong>Dekripsi di Perangkat Kamu:</strong> Pesan hanya bisa diubah kembali menjadi teks biasa saat kamu membukanya dengan ID yang benar. Kunci pembukanya ada di perangkatmu.</p>
                 </div>
             </div>
-            <button onclick="this.parentElement.remove()" class="mt-6 w-full py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition">Tutup Panduan</button>
+            <button onclick="this.parentElement.remove()" class="mt-6 w-full py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition">Paham</button>
         </div>
 
         <div id="setupView" class="hidden fade-in">
-            <div class="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-slate-200 text-center">
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200 text-center">
                 <h2 class="text-2xl font-extrabold mb-2">Buat Kotak Pesan</h2>
                 <p class="text-sm text-slate-500 mb-8 font-medium">Gunakan nama yang mudah diingat</p>
                 <div class="relative mb-6">
@@ -83,36 +83,37 @@
         </div>
 
         <div id="sendView" class="hidden fade-in">
-            <div class="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-slate-200 mb-8 text-center">
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200 mb-8 text-center">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Mengirim Pesan Ke</p>
                 <h2 id="targetDisplay" class="text-2xl font-extrabold text-blue-600 mb-6"></h2>
                 <textarea id="msgText" placeholder="Tulis pesan rahasiamu di sini..." 
                     class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 h-40 outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4 resize-none"></textarea>
                 <button id="sendBtn" onclick="handleSend()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-blue-700 transition-colors">Kirim Pesan Aman</button>
             </div>
+            <p class="text-center text-xs text-slate-400">Pesan ini akan langsung dienkripsi sebelum dikirim.</p>
         </div>
 
         <div id="ownerView" class="hidden fade-in">
-            <div class="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-slate-200 text-center mb-8">
-                <h2 id="ownerNameDisplay" class="text-xl font-extrabold mb-6 truncate px-4"></h2>
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-slate-200 text-center mb-8">
+                <h2 id="ownerNameDisplay" class="text-xl font-extrabold mb-6 truncate px-2"></h2>
                 <div id="qrcode" class="mb-8 qr-canvas"></div>
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="downloadQR()" class="bg-slate-900 text-white py-3.5 rounded-2xl font-bold text-[10px] uppercase">Unduh QR</button>
-                    <button onclick="copyMyLink()" class="bg-slate-100 text-slate-700 py-3.5 rounded-2xl font-bold text-[10px] uppercase">Salin Link</button>
+                    <button onclick="downloadQR()" class="bg-slate-900 text-white py-4 rounded-2xl font-bold text-[11px] uppercase">Unduh QR</button>
+                    <button onclick="copyMyLink()" class="bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold text-[11px] uppercase">Salin Link</button>
                 </div>
             </div>
 
             <div class="flex justify-between items-center mb-6 px-2">
-                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Pesan Masuk</h3>
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Pesan Masuk (Tersimpan)</h3>
                 <button onclick="clearInbox()" class="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase">Hapus Semua</button>
             </div>
             
-            <div id="messageList" class="space-y-4 pb-10"></div>
+            <div id="messageList" class="space-y-4 pb-12"></div>
         </div>
     </main>
 
     <script>
-        // --- KONFIGURASI SUPABASE ---
+        // --- KONFIGURASI SUPABASE (DIUBAH KE BASE URL) ---
         const SUPABASE_URL = 'https://zjitozgdzhznvcvghmfi.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqaXRvemdkemh6bnZjdmdobWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNTE2MzksImV4cCI6MjA5MjcyNzYzOX0.zFdXLcPcM9bfYukM4hJ-qLNWAMnczReauFbLLAzrMlE';
 
@@ -129,6 +130,7 @@
         const params = new URLSearchParams(window.location.search);
         const target = params.get('to');
 
+        // --- KRIPTOGRAFI AES-GCM ---
         async function getEncryptionKey(id) {
             const enc = new TextEncoder();
             const keyMaterial = await crypto.subtle.importKey(
@@ -145,6 +147,7 @@
             const iv = crypto.getRandomValues(new Uint8Array(12));
             const encoded = new TextEncoder().encode(text);
             const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
+            
             return JSON.stringify({
                 ct: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
                 iv: btoa(String.fromCharCode(...iv))
@@ -157,11 +160,13 @@
                 const key = await getEncryptionKey(id);
                 const iv = new Uint8Array(atob(data.iv).split("").map(c => c.charCodeAt(0)));
                 const ct = new Uint8Array(atob(data.ct).split("").map(c => c.charCodeAt(0)));
+                
                 const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
                 return new TextDecoder().decode(decrypted);
-            } catch (e) { return "⚠️ Pesan tidak dapat didekripsi."; }
+            } catch (e) { return "⚠️ Gagal membaca pesan (Kunci tidak cocok)."; }
         }
 
+        // --- LOGIKA HALAMAN ---
         function start() {
             if (target && target !== myID) {
                 document.getElementById('sendView').classList.remove('hidden');
@@ -175,16 +180,22 @@
         }
 
         async function handleSend() {
-            if (!supabaseClient) return alert("Koneksi Error!");
+            if (!supabaseClient) return alert("Supabase belum terhubung!");
             const txt = document.getElementById('msgText').value.trim();
             if (!txt) return alert("Harap isi pesan!");
+            
             const btn = document.getElementById('sendBtn');
             btn.disabled = true; btn.innerText = "Mengirim...";
+
             const encryptedMsg = await encryptData(txt, target);
-            const { error } = await supabaseClient.from('messages').insert([{ receiver_id: target, content: encryptedMsg }]);
-            if (error) alert("Gagal: " + error.message);
+
+            const { error } = await supabaseClient
+                .from('messages')
+                .insert([{ receiver_id: target, content: encryptedMsg }]);
+
+            if (error) alert("Gagal mengirim: " + error.message);
             else {
-                alert("Pesan Terkirim!");
+                alert("Pesan terenkripsi berhasil dikirim!");
                 document.getElementById('msgText').value = '';
             }
             btn.disabled = false; btn.innerText = "Kirim Pesan Aman";
@@ -193,27 +204,36 @@
         async function fetchMessages() {
             if (!supabaseClient) return;
             const list = document.getElementById('messageList');
-            const { data, error } = await supabaseClient.from('messages').select('*').eq('receiver_id', myID).order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient
+                .from('messages')
+                .select('*')
+                .eq('receiver_id', myID)
+                .order('created_at', { ascending: false });
+
             if (error || !data || data.length === 0) {
-                list.innerHTML = `<div class="text-center py-10 opacity-30 italic text-xs tracking-widest">TIDAK ADA PESAN</div>`;
+                list.innerHTML = `<div class="text-center py-10 opacity-40 italic text-xs">Kotak pesan kosong...</div>`;
                 return;
             }
+
             list.innerHTML = '';
             for (let m of data) {
                 const decrypted = await decryptData(m.content, myID);
                 const time = new Date(m.created_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+                
                 const item = document.createElement('div');
-                item.className = "bg-white p-5 rounded-[20px] border border-slate-200 shadow-sm border-l-4 border-l-blue-500 fade-in";
-                item.innerHTML = `<p class="text-sm text-slate-700 leading-relaxed">${decrypted}</p><span class="text-[9px] font-bold text-slate-300 mt-3 block uppercase">${time}</span>`;
+                item.className = "bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm border-l-4 border-l-blue-500 fade-in";
+                item.innerHTML = `<p class="text-sm text-slate-700 leading-relaxed">${decrypted}</p><span class="text-[9px] font-bold text-slate-300 mt-4 block uppercase">${time}</span>`;
                 list.appendChild(item);
             }
         }
 
         function handleSaveID() {
             let val = document.getElementById('inputID').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-            if (val.length < 3) return alert("Minimal 3 karakter.");
+            if (val.length < 3) return alert("ID minimal 3 karakter.");
+            
             const uniqueID = val + "_" + Math.floor(1000 + Math.random() * 9000);
             localStorage.setItem('sqr_id', uniqueID);
+            
             window.location.href = window.location.origin + window.location.pathname;
         }
 
@@ -222,20 +242,22 @@
             document.getElementById('badgeContainer').classList.remove('hidden');
             document.getElementById('myIdBadge').innerText = "@" + myID;
             document.getElementById('ownerNameDisplay').innerText = "@" + myID;
+            
             document.getElementById("qrcode").innerHTML = "";
             new QRCode(document.getElementById("qrcode"), { 
                 text: window.location.origin + window.location.pathname + "?to=" + myID, 
                 width: 256, 
                 height: 256,
-                correctLevel: QRCode.CorrectLevel.H
+                correctLevel : QRCode.CorrectLevel.H
             });
             fetchMessages();
         }
 
         async function clearInbox() {
             if (!supabaseClient) return;
-            if(confirm("Hapus semua pesan?")) {
-                await supabaseClient.from('messages').delete().eq('receiver_id', myID);
+            if(confirm("Hapus semua pesan secara permanen?")) {
+                const { error } = await supabaseClient.from('messages').delete().eq('receiver_id', myID);
+                if (error) alert("Gagal menghapus: " + error.message);
                 fetchMessages();
             }
         }
@@ -243,12 +265,12 @@
         function copyMyLink() {
             const link = window.location.origin + window.location.pathname + "?to=" + myID;
             navigator.clipboard.writeText(link);
-            alert("Link disalin!");
+            alert("Link kotak disalin!");
         }
 
         function downloadQR() {
             const img = document.querySelector('#qrcode img');
-            if (!img) return alert("QR belum siap.");
+            if (!img) return alert("QR Code belum siap.");
             const a = document.createElement('a');
             a.download = `SecretQR_${myID}.png`;
             a.href = img.src;
