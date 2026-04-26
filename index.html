@@ -113,7 +113,7 @@
     </main>
 
     <script>
-        // --- KONFIGURASI SUPABASE (DIUBAH KE BASE URL) ---
+        // --- KONFIGURASI SUPABASE ---
         const SUPABASE_URL = 'https://zjitozgdzhznvcvghmfi.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpqaXRvemdkemh6bnZjdmdobWZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxNTE2MzksImV4cCI6MjA5MjcyNzYzOX0.zFdXLcPcM9bfYukM4hJ-qLNWAMnczReauFbLLAzrMlE';
 
@@ -271,10 +271,21 @@
         function downloadQR() {
             const img = document.querySelector('#qrcode img');
             if (!img) return alert("QR Code belum siap.");
-            const a = document.createElement('a');
-            a.download = `SecretQR_${myID}.png`;
-            a.href = img.src;
-            a.click();
+            
+            fetch(img.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `SecretQR_${myID}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(() => alert("Gagal mengunduh gambar secara otomatis. Silakan tekan lama pada gambar QR untuk simpan manual."));
         }
 
         window.onload = start;
