@@ -32,9 +32,26 @@
         .fade-in { animation: fadeIn 0.4s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         input, textarea { font-size: 16px !important; }
+
+        /* Style untuk Custom Alert */
+        #customAlert { transition: all 0.3s ease; }
+        .alert-show { opacity: 1; pointer-events: auto; transform: scale(1); }
+        .alert-hide { opacity: 0; pointer-events: none; transform: scale(0.95); }
     </style>
 </head>
 <body class="text-slate-900">
+
+    <div id="customAlert" class="fixed inset-0 z-[100] flex items-center justify-center px-6 bg-slate-900/40 backdrop-blur-sm alert-hide">
+        <div class="bg-white rounded-[28px] p-8 w-full max-w-xs shadow-2xl text-center">
+            <div id="alertIcon" class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <p id="alertMessage" class="text-sm font-bold text-slate-700 leading-relaxed mb-6"></p>
+            <button onclick="closeAlert()" class="w-full bg-slate-900 text-white text-xs font-black py-4 rounded-2xl uppercase tracking-widest transition-transform active:scale-95">Tutup</button>
+        </div>
+    </div>
 
     <nav class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4">
         <div class="max-w-xl mx-auto flex justify-between items-center">
@@ -105,7 +122,7 @@
                     <button onclick="downloadQR()" class="bg-slate-900 text-white py-4 rounded-2xl font-bold text-[11px] uppercase">Unduh QR</button>
                     <button onclick="copyMyLink()" class="bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold text-[11px] uppercase">Salin Link</button>
                 </div>
-                <p class="text-[9px] text-slate-400 italic">Tips: Jika gagal unduh, tekan lama gambar QR lalu pilih "Simpan Gambar".</p>
+                <p class="text-[9px] text-slate-400 italic">Tips: Jika gagal unduh, tekan lama gambar QR lalu pilih "Simpan Gambar" atau screenshot gambar QR.</p>
             </div>
 
             <div class="flex justify-between items-center mb-6 px-2">
@@ -128,6 +145,20 @@
             }
         } catch (e) {
             console.error("Koneksi Supabase gagal.");
+        }
+
+        // --- FUNGSI CUSTOM ALERT ---
+        function showAlert(msg) {
+            const alertBox = document.getElementById('customAlert');
+            document.getElementById('alertMessage').innerText = msg;
+            alertBox.classList.remove('alert-hide');
+            alertBox.classList.add('alert-show');
+        }
+
+        function closeAlert() {
+            const alertBox = document.getElementById('customAlert');
+            alertBox.classList.remove('alert-show');
+            alertBox.classList.add('alert-hide');
         }
 
         let myID = localStorage.getItem('sqr_id');
@@ -182,10 +213,10 @@
         }
 
         async function handleSend() {
-            if (!supabaseClient) return alert("Supabase belum terhubung!");
+            if (!supabaseClient) return showAlert("Supabase belum terhubung!");
             const txt = document.getElementById('msgText').value.trim();
             const sender = document.getElementById('senderName').value.trim() || "Anonim";
-            if (!txt) return alert("Harap isi pesan!");
+            if (!txt) return showAlert("Harap isi pesan!");
             
             const btn = document.getElementById('sendBtn');
             btn.disabled = true; btn.innerText = "Mengirim...";
@@ -196,9 +227,9 @@
                 .from('messages')
                 .insert([{ receiver_id: target, content: encryptedMsg, sender_id: sender }]);
 
-            if (error) alert("Gagal mengirim: " + error.message);
+            if (error) showAlert("Gagal mengirim: " + error.message);
             else {
-                alert("Pesan berhasil dikirim!");
+                showAlert("Pesan berhasil dikirim!");
                 document.getElementById('msgText').value = '';
             }
             btn.disabled = false; btn.innerText = "Kirim Pesan Aman";
@@ -238,7 +269,7 @@
 
         function handleSaveID() {
             let val = document.getElementById('inputID').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
-            if (val.length < 3) return alert("ID minimal 3 karakter.");
+            if (val.length < 3) return showAlert("ID minimal 3 karakter.");
             const uniqueID = val + "_" + Math.floor(1000 + Math.random() * 9000);
             localStorage.setItem('sqr_id', uniqueID);
             window.location.href = window.location.origin + window.location.pathname;
@@ -264,7 +295,7 @@
             if (!supabaseClient) return;
             if(confirm("Hapus semua pesan secara permanen?")) {
                 const { error } = await supabaseClient.from('messages').delete().eq('receiver_id', myID);
-                if (error) alert("Gagal menghapus: " + error.message);
+                if (error) showAlert("Gagal menghapus: " + error.message);
                 fetchMessages();
             }
         }
@@ -272,12 +303,12 @@
         function copyMyLink() {
             const link = window.location.origin + window.location.pathname + "?to=" + myID;
             navigator.clipboard.writeText(link);
-            alert("Link kotak disalin!");
+            showAlert("Link kotak disalin!");
         }
 
         function downloadQR() {
             const img = document.querySelector('#qrcode img');
-            if (!img) return alert("QR Code belum siap.");
+            if (!img) return showAlert("QR Code belum siap.");
             fetch(img.src)
                 .then(res => res.blob())
                 .then(blob => {
@@ -291,7 +322,7 @@
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                 })
-                .catch(() => alert("Gagal mengunduh. Silakan tekan lama pada gambar QR untuk simpan manual."));
+                .catch(() => showAlert("Gagal mengunduh. Screenshot pada gambar QR untuk simpan manual."));
         }
 
         window.onload = start;
